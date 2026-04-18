@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Of "mysql", "sqlite", afhankelijk van je keuze
+  url      = env("DATABASE_URL")
+}
+
+model Uitzendkracht {
+  id                String          @id @default(uuid())
+  naam              String
+  contactInfo       String?         // Optionele contactinformatie
+  maxWerkdagenPerWeek Int             @default(5)
+  actief            Boolean         @default(true) // Is de uitzendkracht actief/inzetbaar?
+
+  // Relaties
+  uitzendkrachtRayons UitzendkrachtRayon[]
+  beschikbaarheden    Beschikbaarheid[]
+  planningen          Planning[]
+}
+
+model Rayon {
+  id                String          @id @default(uuid())
+  naam              String          @unique
+
+  // Relaties
+  uitzendkrachtRayons UitzendkrachtRayon[]
+  dienstRayons        DienstRayon[]
+}
+
+model UitzendkrachtRayon {
+  uitzendkrachtId String
+  rayonId         String
+
+  uitzendkracht Uitzendkracht @relation(fields: [uitzendkrachtId], references: [id])
+  rayon         Rayon         @relation(fields: [rayonId], references: [id])
+
+  @@id([uitzendkrachtId, rayonId]) // Composiet primaire sleutel
+}
+
+model Beschikbaarheid {
+  id              String      @id @default(uuid())
+  uitzendkrachtId String
+  datum           DateTime    @db.Date // Alleen de datum
+  startTime       DateTime    @db.Time(3) // Tijd inclusief milliseconden (of kies een lagere precisie)
+  endTime         DateTime    @db.Time(3) // Tijd inclusief milliseconden
+  notities        String?     // Bijv. "vanaf 15u", "tot 18u", "alleen ochtend"
+  heleWeekNotities String?     // Bijv. "max 3 dagen deze week"
+
+  uitzendkracht Uitzendkracht @relation(fields: [uitzendkrachtId], references: [id])
+
+  @@unique([uitzendkrachtId, datum, startTime, endTime]) // Een uitzendkracht kan niet twee keer dezelfde tijd beschikbaar zijn op dezelfde dag
+}
+
+model Dienst {
+  id            String      @id @default(uuid())
+  omschrijving  String
+  datum         DateTime    @db.Date
+  startTime     DateTime    @db.Time(3)
+  endTime       DateTime    @db.Time(3)
+
+  // Relaties
+  dienstRayons  DienstRayon[]
+  planningen    Planning[]
+}
+
+model DienstRayon {
+  dienstId String
+  rayonId  String
+
+  dienst Dienst @relation(fields: [dienstId], references: [id])
+  rayon  Rayon  @relation(fields: [rayonId], references: [id])
+
+  @@id([dienstId, rayonId])
+}
+
+model Planning {
+  id              String      @id @default(uuid())
+  dienstId        String      @unique // Elke dienst kan maar één keer gepland worden
+  uitzendkrachtId String?     // Nullable totdat een uitzendkracht is toegewezen
+  status          String      @default("open") // "open", "ingedeeld", "geannuleerd"
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  dienst        Dienst        @relation(fields: [dienstId], references: [id])
+  uitzendkracht Uitzendkracht? @relation(fields: [uitzendkrachtId], references: [id])
+}
