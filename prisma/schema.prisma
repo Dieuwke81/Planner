@@ -16,6 +16,7 @@ model Uitzendkracht {
   contactInfo       String?         // Optionele contactinformatie
   maxWerkdagenPerWeek Int             @default(5)
   actief            Boolean         @default(true) // Is de uitzendkracht actief/inzetbaar?
+  tijdelijkVeld     String?         // <--- DE NIEUWE TIJDELIJKE KOLOM
 
   // Relaties
   uitzendkrachtRayons UitzendkrachtRayon[]
