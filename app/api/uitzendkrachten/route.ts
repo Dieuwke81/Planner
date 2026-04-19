@@ -17,15 +17,17 @@ export async function GET() {
       },
     });
     return NextResponse.json(uitzendkrachten);
-  } catch (error) {
+  } catch (error: unknown) { // Explicitly type error as unknown
     console.error('Fout bij ophalen uitzendkrachten:', error);
     return NextResponse.json(
-      { message: 'Internal Server Error', error: error.message },
+      { 
+        message: 'Internal Server Error', 
+        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      }, // Safely access error.message
       { status: 500 }
     );
   }
 }
-
 
 // POST: Nieuwe uitzendkracht toevoegen
 export async function POST(request: Request) {
@@ -57,10 +59,13 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(nieuweUitzendkracht, { status: 201 });
-  } catch (error) {
+  } catch (error: unknown) { // Explicitly type error as unknown
     console.error('Fout bij toevoegen uitzendkracht:', error);
     return NextResponse.json(
-      { message: 'Internal Server Error', error: error.message },
+      { 
+        message: 'Internal Server Error', 
+        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      }, // Safely access error.message
       { status: 500 }
     );
   }
