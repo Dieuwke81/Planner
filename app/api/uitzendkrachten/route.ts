@@ -26,6 +26,7 @@ export async function GET() {
   }
 }
 
+
 // POST: Nieuwe uitzendkracht toevoegen
 export async function POST(request: Request) {
   try {
